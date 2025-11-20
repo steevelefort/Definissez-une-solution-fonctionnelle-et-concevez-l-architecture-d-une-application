@@ -111,19 +111,20 @@ npm install
 
 ### 4️⃣ Configuration des variables d'environnement
 
-Le fichier `back/.env` est déjà configuré avec les valeurs par défaut :
+Copier le fichier `.env.example` dans le dossier `back/` en `back/.env`:
+Le fichier `back/.env` est déjà configuré avec les valeurs par défaut (sauf SECRET et PASSWORD) :
 
 ```env
-SECRET=c1cd766f3975e308ac2e314d109eac38af70e49dec3b46c9217864082881cecf
+SECRET=
 DB_HOST=127.0.0.1
 DB_NAME=ycyw
 DB_USER=ycyw
-DB_PASSWORD=ycyw
+DB_PASSWORD=
 ```
 
 ⚠️ **Important** : Pour un environnement de production, modifiez :
 - `SECRET` : Générez un nouveau secret cryptographique fort
-- `DB_PASSWORD` : Utilisez un mot de passe sécurisé
+- `DB_PASSWORD` : Utilisez le mot de passe sécurisé de votre utilisateur PostgreSQL
 
 Génération d'un nouveau secret avec OpenSSL (optionnel) :
 ```bash
