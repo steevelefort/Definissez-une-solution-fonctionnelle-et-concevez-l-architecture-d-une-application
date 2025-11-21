@@ -19,7 +19,46 @@ INSERT INTO countries (code, name) VALUES
 ('IT', 'Italia'),
 ('PT', 'Portugal'),
 ('BE', 'Belgique'),
-('NL', 'Nederland');
+('NL', 'Nederland'),
+('US', 'United States');
+
+-- Tax jurisdictions table
+-- Represents fiscal zones where different VAT rates apply
+CREATE TABLE tax_jurisdictions (
+    id SERIAL PRIMARY KEY,
+    country_id INTEGER NOT NULL REFERENCES countries(id),
+    code VARCHAR(10) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    vat DECIMAL(5, 2) NOT NULL,
+    CONSTRAINT uq_tax_jurisdiction_code_per_country UNIQUE (country_id, code)
+);
+
+CREATE INDEX idx_tax_jurisdictions_country ON tax_jurisdictions(country_id);
+
+-- Sample tax jurisdictions
+INSERT INTO tax_jurisdictions (country_id, code, name, vat) VALUES
+-- France
+(1, 'FR-MET', 'France métropolitaine', 20.00),
+-- España
+(2, 'ES', 'España peninsular', 21.00),
+-- Deutschland
+(3, 'DE', 'Deutschland (national)', 19.00),
+-- United Kingdom
+(4, 'GB', 'United Kingdom (national)', 20.00),
+-- Italia
+(5, 'IT', 'Italia (nazionale)', 22.00),
+-- Portugal
+(6, 'PT', 'Portugal continental', 23.00),
+-- Belgique
+(7, 'BE', 'Belgique (national)', 21.00),
+-- Nederland
+(8, 'NL', 'Nederland (nationaal)', 21.00),
+-- United States (sample states)
+(9, 'US-CA', 'California', 9.75),
+(9, 'US-TX', 'Texas', 8.25),
+(9, 'US-NY', 'New York', 8.88),
+(9, 'US-FL', 'Florida', 7.00),
+(9, 'US-OR', 'Oregon', 0.00);
 
 -- Users table (clients and support agents)
 
@@ -36,7 +75,7 @@ CREATE TABLE users (
     address_line2 VARCHAR(255),
     city VARCHAR(100) NOT NULL,
     postal_code VARCHAR(20) NOT NULL,
-    country_id INTEGER NOT NULL REFERENCES countries(id),
+    tax_jurisdiction_id INTEGER NOT NULL REFERENCES tax_jurisdictions(id),
 
     -- Driving license (required for clients only)
     license_number VARCHAR(50),
@@ -84,7 +123,7 @@ CREATE TABLE agencies (
     city VARCHAR(100) NOT NULL,
     address TEXT NOT NULL,
     postal_code VARCHAR(20) NOT NULL,
-    country_id INTEGER NOT NULL REFERENCES countries(id),
+    tax_jurisdiction_id INTEGER NOT NULL REFERENCES tax_jurisdictions(id),
 
     -- Geolocation
     latitude DECIMAL(10, 8),
@@ -100,7 +139,7 @@ CREATE TABLE agencies (
     CONSTRAINT chk_valid_longitude CHECK (longitude BETWEEN -180 AND 180)
 );
 
-CREATE INDEX idx_agencies_country ON agencies(country_id);
+CREATE INDEX idx_agencies_tax_jurisdiction ON agencies(tax_jurisdiction_id);
 CREATE INDEX idx_agencies_city ON agencies(city);
 CREATE INDEX idx_agencies_active ON agencies(is_active);
 
@@ -164,23 +203,17 @@ CREATE TABLE pricing_rules (
 CREATE INDEX idx_pricing_rules_lookup ON pricing_rules(category_id, country_id);
 CREATE INDEX idx_pricing_rules_jsonb ON pricing_rules USING GIN (rule_config);
 
--- Sample rule
+-- Sample rule (JsonLogic format)
 INSERT INTO pricing_rules (name, category_id, country_id, rule_config) VALUES
-('FR Compact 2025', 1, 1, '{
-  "conditions": {
-    "all": [
-      {"fact": "category", "operator": "equal", "value": "FCAR"},
-      {"fact": "country", "operator": "equal", "value": "FR"}
-    ]
-  },
-  "event": {
-    "type": "calculate_price",
-    "params": {
-      "baseRatePerDay": 45,
-      "kmRateOneWay": 0.40,
-      "weeklyDiscountPercent": 15
-    }
-  }
+('France Compact 2025', 1, 1, '{
+  "*": [
+    { "if": [ { ">": [{"var": "days"}, 10] },
+              { "+": [ {"*": [100, {"var": "days"}]}, {"*": [{"var": "km"}, 0.35]} ]},
+              { "+": [ {"*": [200, {"var": "days"}]}, {"*": [{"var": "km"}, 0.50]} ]}
+    ]},
+    { "if": [ {"==": [{"var": "promo_code"}, "SUMMER"]}, 0.90, 1 ]},
+    { "+": [ 1, {"/": [{"var": "vat"}, 100]} ]}
+  ]
 }'::jsonb);
 
 -- Bookings table
@@ -286,7 +319,7 @@ CREATE TABLE notifications (
 CREATE INDEX idx_notifications_user ON notifications(user_id, sent_at);
 
 -- Sample users for demo
-INSERT INTO users (id, email, password_hash, first_name, last_name, birth_date, address_line1, address_line2, city, postal_code, country_id, preferred_language, notification_consent, is_support, is_active, is_deleted)
+INSERT INTO users (id, email, password_hash, first_name, last_name, birth_date, address_line1, address_line2, city, postal_code, tax_jurisdiction_id, preferred_language, notification_consent, is_support, is_active, is_deleted)
 VALUES
 (1, 'agent@ycyw.com', '$2b$10$iKAO.iDOXhyC0djMSt..9u/XXCMKbUeN.GaQKthQRMuxWVnno2VFO', 'Agent', 'Smith', '1979-01-27', '28 rue de la Chaume d''en Bas', NULL, 'Paris', '75001', 1, 'fr', true, true, true, false),
 (2, 'client@ycyw.com', '$2b$10$iKAO.iDOXhyC0djMSt..9u/XXCMKbUeN.GaQKthQRMuxWVnno2VFO', 'Roland', 'LeClient', '1979-01-27', '28 rue de la Chaume d''en Bas', NULL, 'Paris', '75001', 1, 'fr', true, false, true, false);
