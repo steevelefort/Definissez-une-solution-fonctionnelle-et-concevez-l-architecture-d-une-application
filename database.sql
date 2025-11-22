@@ -5,7 +5,8 @@
 CREATE TABLE countries (
     id SERIAL PRIMARY KEY,
     code VARCHAR(2) NOT NULL UNIQUE,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    currency_code VARCHAR(3) NOT NULL
 );
 
 CREATE INDEX idx_countries_code ON countries(code);
