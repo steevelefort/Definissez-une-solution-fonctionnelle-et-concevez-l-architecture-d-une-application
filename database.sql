@@ -12,16 +12,16 @@ CREATE TABLE countries (
 CREATE INDEX idx_countries_code ON countries(code);
 
 -- Sample data
-INSERT INTO countries (code, name) VALUES
-('FR', 'France'),
-('ES', 'España'),
-('DE', 'Deutschland'),
-('GB', 'United Kingdom'),
-('IT', 'Italia'),
-('PT', 'Portugal'),
-('BE', 'Belgique'),
-('NL', 'Nederland'),
-('US', 'United States');
+INSERT INTO countries (code, name, currency_code) VALUES
+('FR', 'France', 'EUR'),
+('ES', 'España', 'EUR'),
+('DE', 'Deutschland', 'EUR'),
+('GB', 'United Kingdom', 'GBP'),
+('IT', 'Italia', 'EUR'),
+('PT', 'Portugal', 'EUR'),
+('BE', 'Belgique', 'EUR'),
+('NL', 'Nederland', 'EUR'),
+('US', 'United States', 'USD');
 
 -- Tax jurisdictions table
 -- Represents fiscal zones where different VAT rates apply
