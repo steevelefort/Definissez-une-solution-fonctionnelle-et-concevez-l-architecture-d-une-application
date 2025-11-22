@@ -99,7 +99,7 @@ module.exports = (io) => {
       }
 
       try {
-        pool.query("insert into messages (conversation_id, sender_id, message) values ($1, $2, $3)", [data.session, socket.user.id, data.message]);
+        await pool.query("insert into messages (conversation_id, sender_id, message) values ($1, $2, $3)", [data.session, socket.user.id, data.message]);
       } catch (error) {
         console.error(error.message);
       }
