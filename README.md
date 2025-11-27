@@ -90,7 +90,7 @@ psql -U ycyw -d ycyw -f database.sql
 Vérification :
 ```bash
 psql -U ycyw -d ycyw -c "\dt"
-# Doit afficher 12 tables : countries, users, password_reset_tokens,
+# Doit afficher 13 tables : countries, users, password_reset_tokens,
 # agencies, vehicle_categories, vehicles, pricing_rules, bookings,
 # conversations, messages, video_sessions, notifications
 ```
